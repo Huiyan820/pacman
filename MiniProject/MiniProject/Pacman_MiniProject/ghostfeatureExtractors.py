@@ -101,7 +101,7 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         #--------------------------------------------------------------------------------------------------
         closestghost = min([manhattanDistance(pacmanPosition, ghost.getPosition()) for ghost in ghostStates])
         if closestghost is not None:
-            features["closest-pacman"] = float(closestghost) / (walls.width * walls.height)
+            features["closest-ghost"] = float(closestghost) / (walls.width * walls.height)
 
 
         features.divideAll(10.0)
