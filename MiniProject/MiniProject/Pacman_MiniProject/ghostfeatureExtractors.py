@@ -16,6 +16,7 @@
 
 from game import Directions, Actions
 import util
+from util import manhattanDistance
 
 
 class GhostFeatureExtractor:
@@ -91,22 +92,17 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
     
     def getFeatures(self, state, action):
 
-        x, y = state.getGhostPosition(2)
-        dx, dy = Actions.directionToVector(action)
-        next_x, next_y = int(x + dx), int(y + dy)
-
+        ghostStates = state.getGhostStates()
         pacmanPosition = state.getPacmanPosition()
         walls = state.getWalls()
-
-
         features = util.Counter()
-      
-
-        #Feature 1: distance to pacman
+        
+        #Feature 1: minimum distance between ghost to pacman
         #--------------------------------------------------------------------------------------------------
-        distToPacman = stepDistance((next_x, next_y),pacmanPosition, walls)
-        if distToPacman is not None:
-            features["closest-pacman"] = float(distToPacman) / (walls.width * walls.height)
+        closestghost = min([manhattanDistance(pacmanPosition, ghost.getPosition()) for ghost in ghostStates])
+        if closestghost is not None:
+            features["closest-pacman"] = float(closestghost) / (walls.width * walls.height)
+
 
         features.divideAll(10.0)
         return features
