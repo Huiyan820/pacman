@@ -94,14 +94,10 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
         return self.weights
 
 
-    def update(self, state, action, nextState, reward):
-        features = self.featExtractor.getFeatures(state, action)          
-        #self.q_values[(state, action)] += self.alpha * (reward + self.discount * self.q_values[(nextState,self.computeActionFromQValues(nextState))] - self.q_values[(state,action)])
-        possibleStateQValues = []
-        for act in self.getLegalActions(state):
-    	    possibleStateQValues.append(self.getQValue(state, act))
+    def update(self, state, action, nextState, reward): 
+        features = self.featExtractor.getFeatures(state, action)   
         for key in features.keys():
-            self.weights[key] += self.alpha*(reward+self.discount*((1-self.epsilon)*self.q_values[(nextState,self.computeActionFromQValues(nextState))]+(self.epsilon/len(possibleStateQValues))*(sum(possibleStateQValues)))- self.q_values[(state,action)]) * features[key]
+            self.weights[key] +=  self.alpha * ((reward + self.discount * self.getValue(nextState)) - self.getQValue(state, action))*features[key]
 
     def final(self, state):
         "Called at the end of each game."
