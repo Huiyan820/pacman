@@ -113,7 +113,7 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         #--------------------------------------------------------------------------------------------------
         distFromPacmanToCapsule = closestCapsule(pacmanPosition,capsule,walls) 
         if distFromPacmanToCapsule is not None:
-            features["distance-pacman-ghost"] = float(distFromPacmanToCapsule) / (walls.width * walls.height)*10
+            features["distance-pacman-capsule"] = float(distFromPacmanToCapsule) / (walls.width * walls.height)*10
         
         #Feature 3: if the ghost is scared
         #--------------------------------------------------------------------------------------------------
