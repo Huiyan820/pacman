@@ -94,7 +94,7 @@ def stepDistance(from_pos, to_pos, walls):
     return None
 
 
-
+ 
 
 
 class GhostAdvancedExtractor(GhostFeatureExtractor):
@@ -153,3 +153,26 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         
         features.divideAll(10.0)
         return features
+
+
+    def scaredGhost(self, state, agentIndex, legalActions):
+        ghostPosition = state.getGhostPosition(agentIndex)
+        ghostState = state.getGhostState(agentIndex)
+        pacmanPosition = state.getPacmanPosition()
+        isScared = ghostState.scaredTimer
+
+        if isScared <= 0:
+            return None
+
+        action = None
+    
+        maxDistance = float('-inf')
+        if isScared > 0:
+            for act in legalActions:
+                dx, dy = Actions.directionToVector(act)
+                newGhostPosition = (ghostPosition[0]+dx,ghostPosition[1]+dy)
+                dist = util.manhattanDistance(newGhostPosition, pacmanPosition)
+                if dist > maxDistance:
+                    action = act
+                    maxDistance = dist 
+        return action

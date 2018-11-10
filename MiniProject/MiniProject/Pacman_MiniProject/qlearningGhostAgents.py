@@ -96,7 +96,7 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
 
     def update(self, state, action, nextState, reward): 
         features = self.featExtractor.getFeatures(state, action)  
-        print(features)
+        #print(self.getLegalActions(state))
         #print(features["distance-pacman-ghost"])
         for key in features.keys():
             self.weights[key] +=  self.alpha * ((reward + self.discount * self.getValue(nextState)) - self.getQValue(state, action))*features[key]
@@ -116,10 +116,10 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
 
     def getAction(self, state):
         #Uncomment the following if you want one of your agent to be a random agent.
-        action = None
-        #if self.agentIndex == 1:
-            #action = random.choice(self.getLegalActions(state))
-        #else: 
+        action = self.featExtractor.scaredGhost(state, self.agentIndex, self.getLegalActions(state))
+        if action is not None:
+            return action
+            
         if random.uniform(0,1) < self.epsilon:
             action = random.choice(self.getLegalActions(state))
         else:
