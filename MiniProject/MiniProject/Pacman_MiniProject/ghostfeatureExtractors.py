@@ -92,7 +92,7 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
     
     def getFeatures(self, state, action):
 
-        ghostState = state.getGhostStates(1)
+        ghostState = state.getGhostState(1)
         ghostPositions = state.getGhostPositions()
         capsule = state.getCapsules()
         dx, dy = Actions.directionToVector(action)
