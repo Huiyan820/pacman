@@ -870,6 +870,7 @@ def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, c
             f.close()
 
     if (numGames - numTraining) > 0:
+        import pickle
         scores = [game.state.getGhostScore() for game in games]
         wins = [game.state.isWin() for game in games]
         winRate = wins.count(True) / float(len(wins))
@@ -879,7 +880,8 @@ def runGames(layout, pacman, ghosts, display, numGames, record, numTraining=0, c
                (wins.count(True), len(wins), winRate)))
         print(('Record:       ', ', '.join(
             [['Loss', 'Win'][int(w)] for w in wins])))
-
+        with open('scoreHistory.pkl', 'wb') as f:
+            pickle.dump(scores, f)
     return games
     
 def runGamesPacmanTrain(layout, pacman, ghosts, display, numGames, record, numTraining=0, catchExceptions=False, timeout=30,startIndex=0,endIndex=0):
