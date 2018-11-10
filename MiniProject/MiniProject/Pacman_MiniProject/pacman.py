@@ -622,7 +622,7 @@ def readCommand(argv,pacmantrain=True,pacmanTypestr="Smart",pacmanInstance=None)
 
     # Fix the random seed
     if options.fixRandomSeed:
-        random.seed('18')
+        random.seed(18)
 
     # Choose a layout
     args['layout'] = layout.getLayout(options.layout)
