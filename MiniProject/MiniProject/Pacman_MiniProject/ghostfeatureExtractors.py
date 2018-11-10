@@ -94,6 +94,10 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
 
         ghostState = state.getGhostState(1)
         ghostPositions = state.getGhostPositions()
+        
+        ghostPostion1 = state.getGhostPosition(1)
+        ghostPostion2 = state.getGhostPosition(2)
+
         capsule = state.getCapsules()
         dx, dy = Actions.directionToVector(action)
         pacmanPosition = state.getPacmanPosition()
@@ -122,8 +126,10 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         else: 
             features["scared"] = 0
             
-
-
+        #Feature 4: distance between ghost
+        disBetweenGhost = stepDistance(ghostPostion1,ghostPostion2,walls)
+        if  disBetweenGhost is not None and disBetweenGhost!=0 :
+            features["distance-between-ghosts"] = 0.5/disBetweenGhost + 1
 
 
         features.divideAll(10.0)
