@@ -51,6 +51,16 @@ def closestFood(pacman_pos, food, walls):
             fringe.append((nbr_x, nbr_y, dist+1))
     return None
 
+def totalNumberofFood(walls, food):
+    totalFood = 0
+    width = walls.width
+    height = walls.height
+    for i in range(width):
+        for j in range(height):
+            if food[i][j] :
+                totalFood = totalFood + 1
+    return totalFood
+
 
 def closestCapsule(pacman_pos, capsules, walls):
     fringe = [(pacman_pos[0], pacman_pos[1], 0)]
@@ -98,9 +108,11 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         dx, dy = Actions.directionToVector(action)
         pacmanPosition = state.getPacmanPosition()
         isScared = ghostState.scaredTimer > 0
+        food = state.getFood()
 
         walls = state.getWalls()
         features = util.Counter()
+        pacman_x, pacman_y = pacmanPosition
         
         #Feature 1: average distance between ghost to pacman
         #--------------------------------------------------------------------------------------------------
@@ -122,9 +134,12 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         else: 
             features["scared"] = 0
             
+        #Feature 4: minimum distance between pacman to food
+        #--------------------------------------------------------------------------------------------------
+        total_food = totalNumberofFood(walls, food)
+        dist_closestFood = closestFood((pacman_x, pacman_y), food, walls)
+        features["distance-to-food"] = (96 - total_food) / 96 * ( 0.9 ** dist_closestFood) + 0.1
 
-
-
-
+        
         features.divideAll(10.0)
         return features
