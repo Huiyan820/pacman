@@ -92,18 +92,38 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
     
     def getFeatures(self, state, action):
 
-        #ghostStates = state.getGhostStates()
+        ghostState = state.getGhostStates(1)
         ghostPositions = state.getGhostPositions()
+        capsule = state.getCapsules()
         dx, dy = Actions.directionToVector(action)
         pacmanPosition = state.getPacmanPosition()
+        isScared = ghostState.scaredTimer > 0
+
         walls = state.getWalls()
         features = util.Counter()
         
-        #Feature 1: mini distance between ghost to pacman
+        #Feature 1: average distance between ghost to pacman
         #--------------------------------------------------------------------------------------------------
-        closestghost = min([stepDistance((ghost[0]+dx,ghost[1]+dy),pacmanPosition, walls) for ghost in ghostPositions])
+        closestghost = sum([stepDistance((ghost[0]+dx,ghost[1]+dy),pacmanPosition, walls) for ghost in ghostPositions])/len(ghostPositions)
         if closestghost is not None:
-            features["closest-ghost"] = float(closestghost) / (walls.width * walls.height)
+            features["closest-ghost"] = float(closestghost) / (walls.width * walls.height)*10
+        
+        
+        #Feature 2: distance between pacman to capsule
+        #--------------------------------------------------------------------------------------------------
+        distFromPacmanToCapsule = closestCapsule(pacmanPosition,capsule,walls) 
+        if distFromPacmanToCapsule is not None:
+            features["distance-pacman-ghost"] = float(distFromPacmanToCapsule) / (walls.width * walls.height)*10
+        
+        #Feature 3: if the ghost is scared
+        #--------------------------------------------------------------------------------------------------
+        if(isScared):
+            features["scared"] = 2
+        else: 
+            features["scared"] = 0
+            
+
+
 
 
         features.divideAll(10.0)
