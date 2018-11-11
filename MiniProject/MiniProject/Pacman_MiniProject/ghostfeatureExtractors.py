@@ -16,6 +16,7 @@
 
 from game import Directions, Actions
 import util
+import math
 from util import manhattanDistance
 
 
@@ -134,7 +135,7 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         #--------------------------------------------------------------------------------------------------
         distFromPacmanToCapsule = closestCapsule(pacmanPosition,capsule,walls) 
         if distFromPacmanToCapsule is not None and not isScared:
-            features["distance-pacman-capsule"] = 1/float(distFromPacmanToCapsule)
+            features["distance-pacman-capsule"] = 1/math.sqrt(float(distFromPacmanToCapsule))
             
             
         #Feature 4: distance between ghost
@@ -251,13 +252,10 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
                     nearestDist = dist
                     nearestCap = i
 
-            #invert the nearest capsule to get ghost to run towards the other capsule position
-            nearestCapPosition = capsulePosition[1-nearestCap]
-
             dx, dy = Actions.directionToVector(action)
             newGhostPosition = (ghostPosition[0]+dx,ghostPosition[1]+dy)
 
-            dist = stepDistance(newGhostPosition, nearestCapPosition, walls)
+            dist = 1/math.sqrt(stepDistance(newGhostPosition, capsulePosition[nearestCap], walls)) * 2
             return dist
-        distFromPacmanToCapsule = closestCapsule(pacmanPosition,capsule,walls) 
+        distFromPacmanToCapsule = 1/math.sqrt(closestCapsule(pacmanPosition,capsule,walls))
         return distFromPacmanToCapsule

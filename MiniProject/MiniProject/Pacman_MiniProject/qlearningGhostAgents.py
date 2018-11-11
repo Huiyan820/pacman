@@ -55,7 +55,7 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
 
         self.featExtractor = util.lookup(extractor, globals())()
         self.weights = util.Counter()
-        #self.weights["scared-ghost"] = 100.0
+        self.weights["scared-ghost"] = 100.0
         #self.weights["dist-to-pacman"] = 100.0
         ReinforcementGhostAgent.__init__(self, **args)
 
@@ -100,7 +100,7 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
 
     def update(self, state, action, nextState, reward):
         features = self.featExtractor.getFeatures(state, action, self.agentIndex)
-
+        #print(features["scared-ghost"])
         for key in features.keys():
             self.weights[key] += self.alpha * (reward + self.discount * self.computeValueFromQValues(nextState) - self.getQValue(state, action)) * features[key]
         #print(self.weights)
