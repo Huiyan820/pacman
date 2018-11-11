@@ -104,6 +104,7 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
 
         ghostState = state.getGhostState(1)
         ghostPositions = state.getGhostPositions()
+        ghostPosition = state.getGhostPosition(agentIndex)
         
         ghostPosition1 = state.getGhostPosition(1)
         ghostPosition2 = state.getGhostPosition(2)
@@ -120,33 +121,25 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         
         #Feature 1: average distance between ghost to pacman
         #--------------------------------------------------------------------------------------------------
-        # closestghost = sum([stepDistance((ghost[0]+dx,ghost[1]+dy),pacmanPosition, walls) for ghost in ghostPositions])/len(ghostPositions)
-        # if closestghost is not None:
-        #     features["closest-ghost"] = float(closestghost) / (walls.width * walls.height)*10
-        if (agentIndex==1):
-            distanceFromAgent1toPac = stepDistance((ghostPosition1[0]+dx,ghostPosition1[1]+dy),pacmanPosition,walls)
-            if distanceFromAgent1toPac is not None:
-                features["dist1-to-pac"] = float( distanceFromAgent1toPac) / (walls.width * walls.height)*10
-        
-        if (agentIndex==2):
-            distanceFromAgent2toPac = stepDistance((ghostPosition2[0]+dx,ghostPosition2[1]+dy),pacmanPosition,walls)
-            if distanceFromAgent2toPac is not None:
-                features["dist2-to-pac"] = float( distanceFromAgent2toPac) / (walls.width * walls.height)*10
+        closestghost = sum([stepDistance((ghost[0]+dx,ghost[1]+dy),pacmanPosition, walls) for ghost in ghostPositions])/len(ghostPositions)
+        if closestghost is not None and not isScared:
+            features["closest-ghost"] = float(closestghost) / (walls.width * walls.height)*10
+
+        #possible feature
+        distanceToPacman = stepDistance((ghostPosition[0]+dx,ghostPosition[1]+dy), pacmanPosition, walls)
+        features["dist-to-pacman"] = float(distanceToPacman)/(walls.width * walls.height)*10
 
         
         #Feature 2: distance between pacman to capsule
         #--------------------------------------------------------------------------------------------------
         distFromPacmanToCapsule = closestCapsule(pacmanPosition,capsule,walls) 
-        if distFromPacmanToCapsule is not None:
-            features["distance-pacman-capsule"] = float(distFromPacmanToCapsule) / (walls.width * walls.height)*10
-            if(distFromPacmanToCapsule<10 or isScared):
-                features["run"] = 20
-            else:
-                features["run"] = 0
+        if distFromPacmanToCapsule is not None and not isScared:
+            features["distance-pacman-capsule"] = 1/float(distFromPacmanToCapsule)
+            
             
         #Feature 4: distance between ghost
         disBetweenGhost = stepDistance(ghostPosition1,ghostPosition2,walls)
-        if  disBetweenGhost is not None and disBetweenGhost!=0 :
+        if  disBetweenGhost is not None and disBetweenGhost!=0 and not isScared:
             features["distance-between-ghosts"] = 0.5/(disBetweenGhost + 1)
 
 
@@ -154,7 +147,8 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         #--------------------------------------------------------------------------------------------------
         total_food = totalNumberofFood(walls, food)
         dist_closestFood = closestFood((pacman_x, pacman_y), food, walls)
-        features["distance-to-food"] = (((96 - total_food) / 96) * (0.9 ** dist_closestFood)) + 0.1
+        if not isScared:
+            features["distance-to-food"] = (((96 - total_food) / 96) * (0.9 ** dist_closestFood)) + 0.1
 
         #Feature 6: the number of exits
         # actions = Actions.getLegalNeighbors((pacman_x, pacman_y), walls)-1
@@ -170,6 +164,9 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         #print(numOfValidActions)
         #else:
         
+
+        #Feature 7: scared ghost
+        features["scared-ghost"] = self.scaredFeature(state, action, agentIndex)
 
 
 
@@ -211,14 +208,14 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         for i in range(len(capsulePosition)):
             cap = capsulePosition[i]
             dist = util.manhattanDistance(cap, pacmanPosition)
-            if dist <= nearestDist:
+            if dist <= nearestDist and cap in capsule:
                 nearestDist = dist
                 nearestCap = i
 
         #invert the nearest capsule to get ghost to run towards the other capsule position
         nearestCapPosition = capsulePosition[1-nearestCap]
-        #print(nearestCapPosition)
-        #action = self.actionDFS(ghostPosition, nearestCapPosition, legalActions)
+
+        #get action nearest to position
         minDistance = float('inf')
         for act in legalActions:
             dx, dy = Actions.directionToVector(act)
@@ -228,3 +225,39 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
                 action = act
                 minDistance = dist 
         return action
+
+
+    def scaredFeature(self, state, action, agentIndex):
+        #get all positions and states
+        ghostPosition = state.getGhostPosition(agentIndex)
+        ghostState = state.getGhostState(agentIndex)
+        pacmanPosition = state.getPacmanPosition()
+        capsule = state.getCapsules()
+        walls = state.getWalls()
+
+        isScared = ghostState.scaredTimer > 0
+
+        #position of the 2 capsules
+        capsulePosition = [(1,9),(18,1)]
+
+        if isScared:
+            #get the position of nearest capsule to pacman
+            nearestCap = 0
+            nearestDist = float("inf")
+            for i in range(len(capsulePosition)):
+                cap = capsulePosition[i]
+                dist = util.manhattanDistance(cap, pacmanPosition)
+                if dist <= nearestDist and cap in capsule:
+                    nearestDist = dist
+                    nearestCap = i
+
+            #invert the nearest capsule to get ghost to run towards the other capsule position
+            nearestCapPosition = capsulePosition[1-nearestCap]
+
+            dx, dy = Actions.directionToVector(action)
+            newGhostPosition = (ghostPosition[0]+dx,ghostPosition[1]+dy)
+
+            dist = stepDistance(newGhostPosition, nearestCapPosition, walls)
+            return dist
+        distFromPacmanToCapsule = closestCapsule(pacmanPosition,capsule,walls) 
+        return distFromPacmanToCapsule
