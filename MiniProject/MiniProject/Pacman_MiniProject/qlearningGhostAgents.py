@@ -60,7 +60,7 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
           or the Q node value otherwise
         """
         qValue= 0.0
-        features = self.featExtractor.getFeatures(state, action)
+        features = self.featExtractor.getFeatures(state, action, self.agentIndex)
         for key in features.keys():
            	qValue += (self.weights[key] * features[key])
         
@@ -95,7 +95,7 @@ class QLearningGhostAgent(ReinforcementGhostAgent):
 
 
     def update(self, state, action, nextState, reward): 
-        features = self.featExtractor.getFeatures(state, action)  
+        features = self.featExtractor.getFeatures(state, action, self.agentIndex)  
         #print(self.getLegalActions(state))
         #print(features["distance-pacman-ghost"])
         for key in features.keys():
