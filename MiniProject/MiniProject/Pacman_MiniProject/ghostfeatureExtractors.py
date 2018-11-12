@@ -119,28 +119,32 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         walls = state.getWalls()
         features = util.Counter()
         pacman_x, pacman_y = pacmanPosition
-        
+
+        distFromPacmanToCapsule = closestCapsule(pacmanPosition,capsule,walls) 
+
         #Feature 1: average distance between ghost to pacman
         #--------------------------------------------------------------------------------------------------
         closestghost = sum([stepDistance((ghost[0]+dx,ghost[1]+dy),pacmanPosition, walls) for ghost in ghostPositions])/len(ghostPositions)
-        if closestghost is not None and not isScared:
+        if closestghost is not None and not isScared and (distFromPacmanToCapsule is not None and distFromPacmanToCapsule > 10):
             features["closest-ghost"] = float(closestghost) / (walls.width * walls.height)*10
 
         #possible feature
-        distanceToPacman = stepDistance((ghostPosition[0]+dx,ghostPosition[1]+dy), pacmanPosition, walls)
-        features["dist-to-pacman"] = float(distanceToPacman)/(walls.width * walls.height)*10
+        if not isScared and (distFromPacmanToCapsule is not None and distFromPacmanToCapsule > 10):
+            distanceToPacman = stepDistance((ghostPosition[0]+dx,ghostPosition[1]+dy), pacmanPosition, walls)
+            features["dist-to-pacman"] = float(distanceToPacman)/(walls.width * walls.height)*10
 
         
         #Feature 2: distance between pacman to capsule
         #--------------------------------------------------------------------------------------------------
-        distFromPacmanToCapsule = closestCapsule(pacmanPosition,capsule,walls) 
-        if distFromPacmanToCapsule is not None and not isScared:
-            features["distance-pacman-capsule"] = 1/math.sqrt(float(distFromPacmanToCapsule))
+        
+        # if distFromPacmanToCapsule is not None and not isScared:
+        #     features["distance-pacman-capsule"] = float(distFromPacmanToCapsule) / (walls.width * walls.height) * 10 
+         
             
             
         #Feature 4: distance between ghost
         disBetweenGhost = stepDistance(ghostPosition1,ghostPosition2,walls)
-        if  disBetweenGhost is not None and disBetweenGhost!=0 and not isScared:
+        if disBetweenGhost is not None and disBetweenGhost!=0 and not isScared and (distFromPacmanToCapsule is not None and distFromPacmanToCapsule > 10):
             features["distance-between-ghosts"] = 0.5/(disBetweenGhost + 1)
 
 
@@ -148,7 +152,7 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         #--------------------------------------------------------------------------------------------------
         total_food = totalNumberofFood(walls, food)
         dist_closestFood = closestFood((pacman_x, pacman_y), food, walls)
-        if not isScared:
+        if not isScared and (distFromPacmanToCapsule is not None and distFromPacmanToCapsule > 10):
             features["distance-to-food"] = (((96 - total_food) / 96) * (0.9 ** dist_closestFood)) + 0.1
 
         #Feature 6: the number of exits
@@ -236,13 +240,19 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         capsule = state.getCapsules()
         walls = state.getWalls()
 
+        dx, dy = Actions.directionToVector(action)
+        newGhostPosition = (ghostPosition[0]+dx,ghostPosition[1]+dy)
+
         isScared = ghostState.scaredTimer > 0
 
         #position of the 2 capsules
         capsulePosition = [(1,9),(18,1)]
+        distFromPacmanToCapsule = closestCapsule(pacmanPosition,capsule,walls)            
 
-        if isScared:
-            #get the position of nearest capsule to pacman
+        if isScared and len(capsule) == 1:
+            return stepDistance(newGhostPosition, capsule[0], walls)
+
+        if isScared or (distFromPacmanToCapsule is not None and distFromPacmanToCapsule <= 10) or (isScared and distFromPacmanToCapsule is None):
             nearestCap = 0
             nearestDist = float("inf")
             for i in range(len(capsulePosition)):
@@ -251,11 +261,11 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
                 if dist <= nearestDist and cap in capsule:
                     nearestDist = dist
                     nearestCap = i
+            nearestCap = 1 - nearestCap
+            
 
-            dx, dy = Actions.directionToVector(action)
-            newGhostPosition = (ghostPosition[0]+dx,ghostPosition[1]+dy)
-
-            dist = 1/math.sqrt(stepDistance(newGhostPosition, capsulePosition[nearestCap], walls)) * 2
+            dist = stepDistance(newGhostPosition, capsulePosition[nearestCap], walls)
             return dist
-        distFromPacmanToCapsule = 1/math.sqrt(closestCapsule(pacmanPosition,capsule,walls))
-        return distFromPacmanToCapsule
+        return 0.0
+
+
